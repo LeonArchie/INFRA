@@ -11,35 +11,33 @@
  * 1. buildDockerImage(imageName: 'my-image:latest')
  * 2. buildDockerImage(imageName: 'my-image:1.0', contextDir: 'docker')
  */
+
 def call(Map config = [:]) {
-    // Валидация параметров
     if (!config.imageName) {
         error("Parameter 'imageName' is required")
     }
     
     def contextDir = config.contextDir ?: '.'
+    def absPath = sh(script: "echo \$(pwd)/${contextDir}", returnStdout: true).trim()
     
     echo """
     🛠️ Building Docker image:
     - Image: ${config.imageName}
     - Context: ${contextDir}
+    - Absolute path: ${absPath}
     """
     
     try {
-        // Проверяем существование Dockerfile в указанной директории
         def dockerfilePath = "${contextDir}/Dockerfile"
         if (!fileExists(dockerfilePath)) {
             error("Dockerfile not found in ${contextDir}")
         }
         
-        // Выводим информацию о Dockerfile
         sh """
         echo "📄 Dockerfile content (first 20 lines):"
-        head -20 ${dockerfilePath} || true
+        head -20 "${dockerfilePath}"
+        docker build -t "${config.imageName}" "${absPath}"
         """
-        
-        // Собираем образ
-        docker.build(config.imageName, "${contextDir}/")
         
         echo "✅ Image built successfully"
     } catch (Exception e) {
