@@ -19,15 +19,10 @@ def call(Map config = [:]) {
     
     def contextDir = config.contextDir ?: '.'
     
-    // Получаем абсолютный путь без использования pwd (чтобы избежать пробелов)
-    def workspace = env.WORKSPACE.replace(' ', '_')
-    def absPath = "${workspace}/${contextDir}"
-    
     echo """
     🛠️ Building Docker image:
     - Image: ${config.imageName}
     - Context: ${contextDir}
-    - Safe path: ${absPath}
     """
     
     try {
@@ -36,12 +31,15 @@ def call(Map config = [:]) {
             error("Dockerfile not found in ${contextDir}")
         }
         
-        // Используем относительный путь и cd в директорию
+        // Используем абсолютный путь с заменой пробелов
+        def safeWorkspace = env.WORKSPACE.replace(' ', '_')
+        def absPath = "${safeWorkspace}/${contextDir}"
+        
         sh """
         echo "📄 Dockerfile content (first 20 lines):"
         head -20 "${dockerfilePath}"
         echo "Building image from ${contextDir}..."
-        cd "${contextDir}" && docker build -t "${config.imageName}" .
+        docker build -t "${config.imageName}" -f "${dockerfilePath}" .
         """
         
         echo "✅ Image built successfully"
