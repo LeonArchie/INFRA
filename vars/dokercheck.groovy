@@ -1,4 +1,4 @@
-// vars/checkDocker.groovy
+// vars/dokercheck.groovy
 
 /**
  * Проверяет наличие и версию Docker на текущем агенте Jenkins
@@ -8,8 +8,8 @@
  * @throws Exception - Если Docker не найден и failIfMissing=true
  * 
  * Примеры использования:
- * 1. checkDocker() // Просто проверить, прервать если нет Docker
- * 2. def version = checkDocker(failIfMissing: false) // Проверить и получить версию
+ * 1. dokercheck() // Просто проверить, прервать если нет Docker
+ * 2. def version = dokercheck(failIfMissing: false) // Проверить и получить версию
  */
 def call(Map params = [:]) {
     def failIfMissing = params.get('failIfMissing', true)
