@@ -19,7 +19,7 @@ def call(Map config = [:]) {
     // Валидация параметров
     utils.validateRepoUrl(config.repoUrl)
     def repoName = utils.extractRepoName(config.repoUrl)
-    def isPrivate = utils.isPrivateRepo(config.repoUrl, config.credsId)  // Исправлено utilsREPO на isPrivateRepo
+    def isPrivate = utils.isPrivateRepo(config.repoUrl, config.credsId)
 
     echo "🔍 Проверяем репозиторий: ${repoName ?: config.repoUrl}"
 
