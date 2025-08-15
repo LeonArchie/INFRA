@@ -14,12 +14,12 @@
  */
 def call(Map config = [:]) {
     // Инициализация утилит
-    def gitUtils = new gitUtils()
+    def utilsREPO = new utilsREPO()
     
     // Валидация параметров
-    gitUtils.validateRepoUrl(config.repoUrl)
-    def repoName = gitUtils.extractRepoName(config.repoUrl)
-    def isPrivate = gitUtils.utilsREPO(config.repoUrl, config.credsId)
+    utilsREPO.validateRepoUrl(config.repoUrl)
+    def repoName = utilsREPO.extractRepoName(config.repoUrl)
+    def isPrivate = utilsREPO.utilsREPO(config.repoUrl, config.credsId)
 
     echo "🔍 Проверяем репозиторий: ${repoName ?: config.repoUrl}"
 
