@@ -13,13 +13,13 @@
  * 2. checkGitRepo(repoUrl: 'https://github.com/private/repo.git', credsId: 'my-creds')
  */
 def call(Map config = [:]) {
-    // Инициализация утилит
-    def utilsREPO = new utilsREPO()
+    // Получаем экземпляр утилит через вызов метода call()
+    def utils = utilsREPO()  // Изменено с new utilsREPO() на utilsREPO()
     
     // Валидация параметров
-    utilsREPO.validateRepoUrl(config.repoUrl)
-    def repoName = utilsREPO.extractRepoName(config.repoUrl)
-    def isPrivate = utilsREPO.utilsREPO(config.repoUrl, config.credsId)
+    utils.validateRepoUrl(config.repoUrl)
+    def repoName = utils.extractRepoName(config.repoUrl)
+    def isPrivate = utils.isPrivateRepo(config.repoUrl, config.credsId)  // Исправлено utilsREPO на isPrivateRepo
 
     echo "🔍 Проверяем репозиторий: ${repoName ?: config.repoUrl}"
 
@@ -39,7 +39,6 @@ def call(Map config = [:]) {
             )
         }
 
-        // Проверка содержимого
         def files = sh(script: 'ls -la', returnStdout: true).trim()
         echo "📂 Содержимое репозитория:\n${files}"
         
