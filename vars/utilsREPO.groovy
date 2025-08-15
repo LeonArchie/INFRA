@@ -1,3 +1,5 @@
+// vars/utilisREPO.groovy
+
 // Проверка типа репозитория
 def isPrivateRepo(String repoUrl, String credsId = null) {
     return repoUrl?.contains('github.com') && credsId?.trim()

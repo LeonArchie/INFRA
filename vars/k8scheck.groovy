@@ -1,4 +1,4 @@
-// vars/verifyKubernetesAccess.groovy
+// vars/k8scheck.groovy
 
 /**
  * Функция для проверки доступа к Kubernetes кластеру
