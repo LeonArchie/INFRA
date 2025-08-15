@@ -13,34 +13,32 @@
  */
 
 def call(Map config = [:]) {
+    // Обязательные проверки
     if (!config.imageName) {
         error("Parameter 'imageName' is required")
     }
     
-    def contextDir = config.contextDir ?: '.'
-    
-    echo """
-    🛠️ Building Docker image:
-    - Image: ${config.imageName}
-    - Context: ${contextDir}
-    """
-    
+    if (!fileExists('Dockerfile')) {
+        error("Dockerfile not found in project root")
+    }
+
     try {
-        def dockerfilePath = "${contextDir}/Dockerfile"
-        if (!fileExists(dockerfilePath)) {
-            error("Dockerfile not found in ${contextDir}")
-        }
-        
-        // Используем абсолютный путь с заменой пробелов
-        def safeWorkspace = env.WORKSPACE.replace(' ', '_')
-        def absPath = "${safeWorkspace}/${contextDir}"
-        
-        sh """
-        echo "📄 Dockerfile content (first 20 lines):"
-        head -20 "${dockerfilePath}"
-        echo "Building image from ${contextDir}..."
-        docker build -t "${config.imageName}" -f "${dockerfilePath}" .
+        echo """
+        🛠️ Building Docker image from root:
+        - Image: ${config.imageName}
+        - Using root Dockerfile
         """
+        
+        // Выводим информацию о Dockerfile для отладки
+        sh '''
+        echo "=== Dockerfile content ==="
+        head -20 Dockerfile
+        echo "=== Project structure ==="
+        find . -maxdepth 3 -type d
+        '''
+        
+        // Сборка образа
+        sh "docker build -t ${config.imageName} ."
         
         echo "✅ Image built successfully"
     } catch (Exception e) {
