@@ -39,7 +39,7 @@ def call(Map config = [:]) {
             // Проверка 2: Состояние нод кластера
             echo "🖥️ Checking nodes..."
             def nodes = sh(
-                script: 'kubectl get nodes -o wide --no-headers',  # Широкий формат вывода без заголовков
+                script: 'kubectl get nodes -o wide --no-headers',  
                 returnStdout: true
             ).trim()
             echo "Active Nodes:\n${nodes}"
@@ -49,7 +49,7 @@ def call(Map config = [:]) {
             error "❌ Connection failed: ${e.getMessage()}"
         } finally {
             // Всегда очищаем временные файлы, даже при ошибке
-            sh "rm -rf ${safeWorkspace}/.kube || true"  # Игнорируем ошибки удаления
+            sh "rm -rf ${safeWorkspace}/.kube || true" 
         }
     }
 }
