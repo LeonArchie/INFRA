@@ -1,42 +1,51 @@
 // vars/createNamespace.groovy
 
 /**
- * Создает неймспейс в Kubernetes, если он не существует
- * @param namespace Имя неймспейса (обязательный)
- * @param credentialsId ID credentials с kubeconfig (опционально)
- * @return Результат операции
+ * Создает namespace в Kubernetes, если он не существует
+ * 
+ * @param config Map с параметрами:
+ *   - namespace: Имя namespace для создания (обязательный)
+ *   - kubeconfig: Путь к kubeconfig файлу (по умолчанию '$KUBECONFIG')
+ *   - credentialsId: ID credentials в Jenkins с kubeconfig (если нужно загрузить)
  */
-
 def call(Map config = [:]) {
+    // Проверяем обязательные параметры
     if (!config.namespace) {
-        error "Namespace name is required"
+        error("Parameter 'namespace' is required")
     }
 
-    def kubeconfig = "${env.WORKSPACE}/.kube/config"
-    
-    withCredentials([file(credentialsId: config.credentialsId ?: 'k8s_cluster_cred', variable: 'KUBECONFIG_FILE']) {
-        sh """
-            mkdir -p ${env.WORKSPACE}/.kube
-            cp '$KUBECONFIG_FILE' '$kubeconfig'
-            chmod 600 '$kubeconfig'
-        """
+    def namespace = config.namespace
+    def kubeconfig = config.kubeconfig ?: env.KUBECONFIG
+    def credentialsId = config.credentialsId
 
-        try {
-            // Проверка существования неймспейса
-            def namespaceExists = sh(
-                script: "kubectl --kubeconfig='$kubeconfig' get namespace '${config.namespace}' >/dev/null 2>&1 && echo 'exists' || echo 'not_exists'",
-                returnStdout: true
-            ).trim()
+    // Если указан credentialsId, загружаем kubeconfig
+    if (credentialsId) {
+        withCredentials([file(credentialsId: credentialsId, variable: 'K8S_CRED_FILE')]) {
+            kubeconfig = "${env.WORKSPACE}/kubeconfig_${UUID.randomUUID().toString()}"
+            sh """
+                cp '$K8S_CRED_FILE' '$kubeconfig'
+                chmod 600 '$kubeconfig'
+            """
+        }
+    }
 
-            if (namespaceExists == 'not_exists') {
-                echo "Creating namespace: ${config.namespace}"
-                sh "kubectl --kubeconfig='$kubeconfig' create namespace '${config.namespace}'"
-                return [status: 'CREATED', namespace: config.namespace]
-            } else {
-                echo "Namespace ${config.namespace} already exists"
-                return [status: 'EXISTS', namespace: config.namespace]
-            }
-        } finally {
+    try {
+        // Проверяем, существует ли namespace
+        def namespaceExists = sh(
+            script: "kubectl --kubeconfig='$kubeconfig' get namespace '$namespace' >/dev/null 2>&1 && echo 'exists' || echo 'not_exists'",
+            returnStdout: true
+        ).trim()
+
+        if (namespaceExists == 'not_exists') {
+            echo "Namespace $namespace не существует. Создаю..."
+            sh "kubectl --kubeconfig='$kubeconfig' create namespace '$namespace'"
+            echo "Namespace $namespace успешно создан."
+        } else {
+            echo "Namespace $namespace уже существует. Пропускаю создание."
+        }
+    } finally {
+        // Удаляем временный kubeconfig, если он был создан
+        if (credentialsId) {
             sh "rm -f '$kubeconfig' || true"
         }
     }
