@@ -1,23 +1,37 @@
-/**
- * Этот пайплайн проверяет наличие и версию Docker на агенте Jenkins.
- * Он состоит из одной стадии, которая выполняет команду 'docker --version'.
- */
+// vars/checkDocker.groovy
 
-def call() {
-    pipeline {
-        // Запускает пайплайн на любом доступном агенте Jenkins
-        agent any
+/**
+ * Проверяет наличие и версию Docker на текущем агенте Jenkins
+ * 
+ * @param failIfMissing (Boolean) - Прерывать выполнение если Docker не найден (по умолчанию true)
+ * @return String - Версия Docker или null если не установлен (при failIfMissing=false)
+ * @throws Exception - Если Docker не найден и failIfMissing=true
+ * 
+ * Примеры использования:
+ * 1. checkDocker() // Просто проверить, прервать если нет Docker
+ * 2. def version = checkDocker(failIfMissing: false) // Проверить и получить версию
+ */
+def call(Map params = [:]) {
+    def failIfMissing = params.get('failIfMissing', true)
+    
+    try {
+        // Получаем версию Docker
+        def version = sh(
+            script: 'docker --version',
+            returnStdout: true
+        ).trim()
         
-        stages {
-            // Стадия 'Check Docker' - проверка установки Docker
-            stage('Check Docker') {
-                steps {
-                    // Выполняет команду в shell для проверки версии Docker
-                    sh 'docker --version'
-                    // Эта команда выведет версию Docker, если он установлен,
-                    // или ошибку, если Docker не найден в системе
-                }
-            }
+        echo "✅ Docker detected: ${version}"
+        return version
+        
+    } catch (Exception e) {
+        def errorMsg = "Docker is not available: ${e.getMessage()}"
+        
+        if (failIfMissing) {
+            error "❌ ${errorMsg}\nPlease ensure Docker is installed and configured on the agent."
+        } else {
+            echo "⚠️ ${errorMsg}"
+            return null
         }
     }
 }
