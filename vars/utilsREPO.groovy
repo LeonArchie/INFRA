@@ -1,8 +1,3 @@
-
-/**
- * Утилиты для работы с Git репозиториями
- */
-
 // Проверка типа репозитория
 def isPrivateRepo(String repoUrl, String credsId = null) {
     return repoUrl?.contains('github.com') && credsId?.trim()
@@ -22,4 +17,9 @@ def validateRepoUrl(String repoUrl) {
     if (!(repoUrl.startsWith('http') || repoUrl.startsWith('git@'))) {
         error "Некорректный URL репозитория: ${repoUrl}"
     }
+}
+
+// Обязательный метод call для Jenkins Shared Library
+def call() {
+    return this
 }
